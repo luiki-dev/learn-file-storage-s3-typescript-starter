@@ -12,6 +12,8 @@ type Thumbnail = {
   mediaType: string;
 };
 
+const allowedMediaTypes = ["image/jpeg", "image/png"];
+
 export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const { videoId } = req.params as { videoId?: string };
   if (!videoId) {
@@ -42,6 +44,11 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   }
 
   const mediaType = thumbnailFile.type;
+
+  if (!allowedMediaTypes.includes(mediaType)) {
+    throw new BadRequestError(`Media type: ${mediaType} not allowed`);
+  }
+
   const fileExtension = extension(mediaType);
   if (!fileExtension) {
     throw new BadRequestError("Invalid thumbnail file type");
