@@ -5,12 +5,14 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "^1.2.7",
-    "@types/jsonwebtoken": "^9.0.9"
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/mime-types": "^3.0.1"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "mime-types": "^3.0.2"
   }
 }

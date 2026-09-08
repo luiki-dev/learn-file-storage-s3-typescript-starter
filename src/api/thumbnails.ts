@@ -1,8 +1,10 @@
-import type { BunRequest } from "bun";
+import { type BunRequest } from "bun";
+import { extension } from "mime-types";
+import path from "path";
 import { getBearerToken, validateJWT } from "../auth";
 import type { ApiConfig } from "../config";
 import { getVideo, updateVideo } from "../db/videos";
-import { BadRequestError, NotFoundError, UserForbiddenError } from "./errors";
+import { BadRequestError, UserForbiddenError } from "./errors";
 import { respondWithJSON } from "./json";
 
 type Thumbnail = {
@@ -31,23 +33,26 @@ export async function handlerUploadThumbnail(cfg: ApiConfig, req: BunRequest) {
   const MAX_UPLOAD_SIZE = 10 << 20;
 
   if (thumbnailFile.size > MAX_UPLOAD_SIZE) {
-    throw new BadRequestError("Thumbnail to large")
+    throw new BadRequestError("Thumbnail to large");
   }
-
-  const mediaType = thumbnailFile.type;
-  const arrayBuffer: ArrayBuffer = await thumbnailFile.arrayBuffer();
-  
 
   const video = getVideo(cfg.db, videoId);
   if (video?.userID != userID) {
-    throw new UserForbiddenError("User is not an owner of the video")
+    throw new UserForbiddenError("User is not an owner of the video");
   }
 
-  const buffer = Buffer.from(arrayBuffer);
-  const thumbnailBase64 = buffer.toBase64();
-  const dataURL = `data:${mediaType};base64,${thumbnailBase64}`;
+  const mediaType = thumbnailFile.type;
+  const fileExtension = extension(mediaType);
+  if (!fileExtension) {
+    throw new BadRequestError("Invalid thumbnail file type");
+  }
 
-  video.thumbnailURL = dataURL;
+  const arrayBuffer: ArrayBuffer = await thumbnailFile.arrayBuffer();
+
+  const filePath = path.join(cfg.assetsRoot, `${videoId}.${fileExtension}`);
+  Bun.write(filePath, arrayBuffer);
+
+  video.thumbnailURL = `http://localhost:${cfg.port}/assets/${videoId}.${fileExtension}`;
 
   updateVideo(cfg.db, video);
 
